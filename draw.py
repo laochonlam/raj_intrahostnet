@@ -43,7 +43,7 @@ fall_times = [fall_time, fall_time]
 # Add timeout (4min30s = 4.5min), scheduling (935s = 15.58min), and reboot (67s = 1.12min) after fallback
 timeout_duration = 4.5  # 4 minutes 30 seconds
 scheduling_duration = 15.58  # 935 seconds
-reboot_duration = 1.12  # 67 seconds
+reboot_duration = 2.5  # 2.5 minutes
 total_delay = timeout_duration + scheduling_duration + reboot_duration
 
 timeout_end = fall_time + timeout_duration
@@ -81,38 +81,38 @@ ax.plot(extra_curve_times, extra_curve_steps, color='#ff3a43', linewidth=4)
 
 # Mark failure point at step 75
 ax.plot(fall_time, 75, 'ro', markersize=15, markeredgecolor='black', markeredgewidth=2)
-ax.annotate('Failure\nHappen', xy=(fall_time - 0.1, 75+ 1), xytext=(fall_time - 2, 75 + 10),
+ax.annotate('Failure\nHappen', xy=(fall_time - 0.5, 75), xytext=(fall_time - 10, 65),
             arrowprops=dict(arrowstyle='->', color='red', lw=2), 
-            color='red', fontsize=16, ha='center', weight='bold')
+            color='red', fontsize=18, ha='center', weight='bold')
 
-# Calculate time difference at step 85
-step_85_index = 84  # 0-indexed, so step 85 is at index 84
-perfect_time_at_85 = all_cum_times[step_85_index]
-failure_time_at_85 = extra_curve_times[step_85_index - 50]  # Adjust for fallback to step 50
-time_diff = failure_time_at_85 - perfect_time_at_85
+# Calculate time difference at step 80
+step_80_index = 79  # 0-indexed, so step 80 is at index 79
+perfect_time_at_80 = all_cum_times[step_80_index]
+failure_time_at_80 = extra_curve_times[step_80_index - 50]  # Adjust for fallback to step 50
+time_diff = failure_time_at_80 - perfect_time_at_80
 
 # Create double arrow using FancyArrowPatch
-arrow = FancyArrowPatch((perfect_time_at_85 + 1, 85), (failure_time_at_85 - 1, 85),
+arrow = FancyArrowPatch((perfect_time_at_80 + 1, 80), (failure_time_at_80 - 1, 80),
                        arrowstyle='<->', mutation_scale=20, 
                        color='black', linewidth=3)
 ax.add_patch(arrow)
 
 # Add annotation for time difference
 ax.annotate(f'Time Loss\nAfter Failure:\n{time_diff:.1f}min', 
-            xy=(perfect_time_at_85 + time_diff/2, 85), 
-            xytext=(perfect_time_at_85 + time_diff/2, 85 + 4),
+            xy=(perfect_time_at_80 + time_diff/2, 80), 
+            xytext=(perfect_time_at_80 + time_diff/2, 80 - 18),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), 
-            color='black', fontsize=14, ha='center', weight='bold')
+            color='black', fontsize=20, ha='center', weight='bold')
 
 # Annotations
-ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+7, 64),
+ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+7, 53),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
 
 ax.annotate('Timeout\n4.5min', xy=(fall_time+timeout_duration/2, fallback_step), xytext=(fall_time+timeout_duration/2 - 2, fallback_step-15),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-ax.annotate('Scheduling\n15.58min', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2, fallback_step-15),
+ax.annotate('Stop\nand\nReschedule\n15.58min', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2, fallback_step-19),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-ax.annotate('Reboot\n1.12min', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 2, fallback_step-15),
+ax.annotate('Restart\n2.5min', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 2, fallback_step-15),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
 
 # Axis labels
@@ -123,7 +123,9 @@ ax.grid(True, linestyle='--', alpha=0.7)
 ax.tick_params(axis='both', which='major', labelsize=18)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.set_ylim(30, 100)
+ax.set_ylim(30, 87)
+ax.set_xlim(0, 45)
 
 plt.tight_layout()
+plt.savefig('training_progress_with_failure.pdf', dpi=300, bbox_inches='tight')
 plt.show()
