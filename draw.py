@@ -42,8 +42,8 @@ fall_times = [fall_time, fall_time]
 
 # Add timeout (4min30s = 4.5min), scheduling (935s = 15.58min), and reboot (67s = 1.12min) after fallback
 timeout_duration = 4.5  # 4 minutes 30 seconds
-scheduling_duration = 15.58  # 935 seconds
-reboot_duration = 2.5  # 2.5 minutes
+scheduling_duration = 0.15  # 9 seconds
+reboot_duration = 2.0  # 2 minutes
 total_delay = timeout_duration + scheduling_duration + reboot_duration
 
 timeout_end = fall_time + timeout_duration
@@ -81,7 +81,7 @@ ax.plot(extra_curve_times, extra_curve_steps, color='#ff3a43', linewidth=4)
 
 # Mark failure point at step 75
 ax.plot(fall_time, 75, 'ro', markersize=15, markeredgecolor='black', markeredgewidth=2)
-ax.annotate('Failure\nHappen', xy=(fall_time - 0.5, 75), xytext=(fall_time - 10, 65),
+ax.annotate('Failure\nHappen', xy=(fall_time - 0.5, 75), xytext=(fall_time - 5, 65),
             arrowprops=dict(arrowstyle='->', color='red', lw=2), 
             color='red', fontsize=18, ha='center', weight='bold')
 
@@ -100,19 +100,19 @@ ax.add_patch(arrow)
 # Add annotation for time difference
 ax.annotate(f'Time Loss\nAfter Failure:\n{time_diff:.1f}min', 
             xy=(perfect_time_at_80 + time_diff/2, 80), 
-            xytext=(perfect_time_at_80 + time_diff/2, 80 - 18),
+            xytext=(perfect_time_at_80 + time_diff/2 - 1, 80 - 15),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), 
             color='black', fontsize=20, ha='center', weight='bold')
 
 # Annotations
-ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+7, 53),
+ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+3, 53),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
 
 ax.annotate('Timeout\n4.5min', xy=(fall_time+timeout_duration/2, fallback_step), xytext=(fall_time+timeout_duration/2 - 2, fallback_step-15),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-ax.annotate('Stop\nand\nReschedule\n15.58min', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2, fallback_step-19),
+ax.annotate('Stop and\nReschedule\n9s', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2+2, fallback_step-19),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-ax.annotate('Restart\n2.5min', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 2, fallback_step-15),
+ax.annotate('Restart\n2min', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 7, fallback_step-15),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
 
 # Axis labels
@@ -123,8 +123,8 @@ ax.grid(True, linestyle='--', alpha=0.7)
 ax.tick_params(axis='both', which='major', labelsize=18)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.set_ylim(30, 87)
-ax.set_xlim(0, 45)
+ax.set_ylim(30, 90)
+ax.set_xlim(5, 30)
 
 plt.tight_layout()
 plt.savefig('training_progress_with_failure.pdf', dpi=300, bbox_inches='tight')
