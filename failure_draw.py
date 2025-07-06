@@ -44,7 +44,8 @@ fall_times = [fall_time, fall_time]
 timeout_duration = 4.5  # 4 minutes 30 seconds
 scheduling_duration = 0.15  # 9 seconds
 reboot_duration = 2.0  # 2 minutes
-total_delay = timeout_duration + scheduling_duration + reboot_duration
+wasted_duration = 4.8  # 4.8 minutes
+total_delay = timeout_duration + scheduling_duration + reboot_duration + wasted_duration
 
 timeout_end = fall_time + timeout_duration
 scheduling_end = timeout_end + scheduling_duration
@@ -52,8 +53,8 @@ delay_time = fall_time + total_delay
 
 # Then continue with all extra steps and times, starting from delay_time
 extra_cum_times = np.cumsum(extra_times_minutes) + delay_time
-extra_curve_steps = np.arange(fallback_step+1, fallback_step+1+len(extra_times))  # Steps 51-95
-extra_curve_times = extra_cum_times
+extra_curve_steps = np.arange(fallback_step, fallback_step+len(extra_times)+1)  # Steps 50-95
+extra_curve_times = np.concatenate([[delay_time], extra_cum_times])
 
 # Comparison: continuous training without fallback (all steps 1-120)
 all_times = times + extra_times
@@ -75,56 +76,80 @@ ax.plot([fall_time, timeout_end], [fallback_step, fallback_step], color='#ffde4b
 # Horizontal line during scheduling period
 ax.plot([timeout_end, scheduling_end], [fallback_step, fallback_step], color='#6788e8', linewidth=4)
 # Horizontal line during reboot period
-ax.plot([scheduling_end, delay_time], [fallback_step, fallback_step], color='mediumseagreen', linewidth=4)
-# Continue after delay (all steps 51-95)
+ax.plot([scheduling_end, delay_time], [fallback_step, fallback_step], color='mediumpurple', linewidth=4)
+
+
+# Add horizontal line and annotation for wasted computation time (starts after restart)
+wasted_start_time = delay_time  # Start after the restart period ends
+wasted_end_time = wasted_start_time + wasted_duration
+ax.plot([wasted_start_time, wasted_end_time], [fallback_step, fallback_step], color='orange', linewidth=4)
+# Add vertical line at the end of wasted computation (from red curve to orange line)
+resumed_step_at_wasted_end = np.interp(wasted_end_time, extra_curve_times, extra_curve_steps)
+wasted_end_steps = [resumed_step_at_wasted_end, fallback_step]
+wasted_end_times = [wasted_end_time, wasted_end_time]
+ax.plot(wasted_end_times, wasted_end_steps, color='grey', linestyle=':', linewidth=4, alpha=0.7)
+
+# Continue after delay (all steps 50-95)
 ax.plot(extra_curve_times, extra_curve_steps, color='#ff3a43', linewidth=4)
 
 # Mark failure point at step 75
 ax.plot(fall_time, 75, 'ro', markersize=15, markeredgecolor='black', markeredgewidth=2)
-ax.annotate('Failure\nHappen', xy=(fall_time - 0.5, 75), xytext=(fall_time - 5, 65),
+ax.annotate('Failure\nHappen', xy=(fall_time - 0.5, 75), xytext=(fall_time - 5, 70),
             arrowprops=dict(arrowstyle='->', color='red', lw=2), 
             color='red', fontsize=18, ha='center', weight='bold')
+
+# Mark previous checkpoint at step 50
+checkpoint_time = cum_times[49]  # Step 50 is at index 49 (0-indexed)
+ax.plot(checkpoint_time, 50, 'go', markersize=15, markeredgecolor='black', markeredgewidth=2)
+ax.annotate('Prev.\nCheckpoint', xy=(checkpoint_time - 0.3, 51), xytext=(checkpoint_time - 1, 62),
+            arrowprops=dict(arrowstyle='->', color='green', lw=2), 
+            color='green', fontsize=18, ha='center', weight='bold')
 
 # Calculate time difference at step 80
 step_80_index = 79  # 0-indexed, so step 80 is at index 79
 perfect_time_at_80 = all_cum_times[step_80_index]
-failure_time_at_80 = extra_curve_times[step_80_index - 50]  # Adjust for fallback to step 50
+failure_time_at_80 = extra_curve_times[step_80_index - 49]  # Adjust for fallback to step 50 (step 80 is at index 30 in extra_curve_times)
 time_diff = failure_time_at_80 - perfect_time_at_80
 
-# Create double arrow using FancyArrowPatch
-arrow = FancyArrowPatch((perfect_time_at_80 + 1, 80), (failure_time_at_80 - 1, 80),
+# Draw double arrow at step 75 (horizontal line)
+arrow = FancyArrowPatch((perfect_time_at_80, 75), (failure_time_at_80 - 1, 75),
                        arrowstyle='<->', mutation_scale=20, 
                        color='black', linewidth=3)
 ax.add_patch(arrow)
 
-# Add annotation for time difference
+# Add annotation for time difference at step 75
 ax.annotate(f'Time Loss\nAfter Failure:\n{time_diff:.1f}min', 
-            xy=(perfect_time_at_80 + time_diff/2, 80), 
-            xytext=(perfect_time_at_80 + time_diff/2 - 1, 80 - 15),
+            xy=(perfect_time_at_80 + time_diff/2, 75), 
+            xytext=(perfect_time_at_80 + time_diff/2 - 1, 75 - 15),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), 
             color='black', fontsize=20, ha='center', weight='bold')
 
 # Annotations
-ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+3, 53),
+ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+5, 53),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-
-ax.annotate('Timeout\n4.5min', xy=(fall_time+timeout_duration/2, fallback_step), xytext=(fall_time+timeout_duration/2 - 2, fallback_step-15),
+# Timeout annotation
+ax.annotate('Timeout\n4.5 mins', xy=(fall_time+timeout_duration/2, fallback_step), xytext=(fall_time+timeout_duration/2 -5, fallback_step-8),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-ax.annotate('Stop and\nReschedule\n9s', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2+2, fallback_step-19),
+# Stop and Reschedule annotation
+ax.annotate('Stop and\nReschedule\n9s', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2-1.5, fallback_step-9),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
-ax.annotate('Restart\n2min', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 7, fallback_step-15),
+# Restart annotation
+ax.annotate('Restart\n2 mins', xy=(scheduling_end+reboot_duration/2 + 3, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 2.8, fallback_step-8),
+            arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
+# Wasted Computation annotation
+ax.annotate('Wasted\nComputation\n4.8 mins', xy=(wasted_start_time+wasted_duration/2, fallback_step), xytext=(wasted_start_time+wasted_duration/2 + 0.2 , fallback_step-9),
             arrowprops=dict(arrowstyle='->', color='black', lw=2), color='black', fontsize=18, ha='center')
 
 # Axis labels
 ax.set_xlabel('Training Time (minutes)', fontsize=18)
-ax.set_ylabel('Training Step', fontsize=18)
+ax.set_ylabel('Training Iteration', fontsize=18)
 
 ax.grid(True, linestyle='--', alpha=0.7)
 ax.tick_params(axis='both', which='major', labelsize=18)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.set_ylim(30, 90)
-ax.set_xlim(5, 30)
+ax.set_ylim(40, 78)
+ax.set_xlim(5, 32)
 
 plt.tight_layout()
 plt.savefig('training_progress_with_failure.pdf', dpi=300, bbox_inches='tight')
