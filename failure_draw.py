@@ -128,13 +128,13 @@ ax.annotate(f'Time Loss\nAfter Failure:\n{time_diff:.1f}min',
 ax.annotate('Unsaved\nProgress', xy=(fall_time, 62.5), xytext=(fall_time+4, 53),
             arrowprops=dict(arrowstyle='->', color='black', lw=2, mutation_scale=25), color='black', fontsize=18, ha='center')
 # Timeout annotation
-ax.annotate('Timeout\n4.5 mins', xy=(fall_time+timeout_duration/2, fallback_step), xytext=(fall_time+timeout_duration/2 -5, fallback_step-10.5),
+ax.annotate('Timeout\n4.5 mins', xy=(fall_time+timeout_duration/2, fallback_step), xytext=(fall_time+timeout_duration/2 -5, fallback_step-11.5),
             arrowprops=dict(arrowstyle='->', color='black', lw=2, mutation_scale=25), color='black', fontsize=18, ha='center')
 # Stop and Reschedule annotation
 ax.annotate('Stop and\nReschedule\n9s', xy=(timeout_end+scheduling_duration/2, fallback_step), xytext=(timeout_end+scheduling_duration/2-1.5, fallback_step-14),
             arrowprops=dict(arrowstyle='->', color='black', lw=2, mutation_scale=25), color='black', fontsize=18, ha='center')
 # Restart annotation
-ax.annotate('Restart\n2 mins', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 3, fallback_step-10.5),
+ax.annotate('Restart\n2 mins', xy=(scheduling_end+reboot_duration/2, fallback_step), xytext=(scheduling_end+reboot_duration/2 + 3, fallback_step-11.5),
             arrowprops=dict(arrowstyle='->', color='black', lw=2, mutation_scale=25), color='black', fontsize=18, ha='center')
 # Wasted Computation annotation
 ax.annotate('Wasted\nComputation\n4.8 mins', xy=(reboot_end+wasted_duration/2, fallback_step), xytext=(reboot_end+wasted_duration/2 + 5 , fallback_step-14),
